@@ -30,3 +30,9 @@ This project provides a **REST API** to retrieve the weather for the origin and 
    ```bash
    git clone https://github.com/your-username/deal-engine-weather-service.git
    cd deal-engine-weather-service
+
+2. Build the project:
+   ```bash
+   mvn clean install
+3. Run the application:
+4. Access the API:
