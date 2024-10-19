@@ -1,76 +1,78 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.4</version>
-		<relativePath/> <!-- lookup parent from repository -->
+<!-- Raíz del archivo POM con los namespaces adecuados -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <!-- Versión del modelo POM de Maven -->
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Dependencia padre que hereda configuración de Spring Boot -->
+    <parent>
+	    <groupId>org.springframework.boot</groupId>
+	    <artifactId>spring-boot-starter-parent</artifactId>
+	    <version>3.1.4</version> <!-- Versión más estable -->
 	</parent>
-	<groupId>com.dealengine.weather</groupId>
-	<artifactId>weather-report-api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>WeatherReportAPI</name>
-	<description>API to generate weather reports for departure and destination cities.</description>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
-	<developers>
-		<developer/>
-	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
-	<properties>
-		<java.version>17</java.version>
-	</properties>
-	<dependencies>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
 
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+    <!-- Información básica del proyecto -->
+    <groupId>com.dealengine.weather</groupId> <!-- Paquete raíz del proyecto -->
+    <artifactId>weather-report-api</artifactId> <!-- Nombre del artefacto JAR -->
+    <version>0.0.1-SNAPSHOT</version> <!-- Indica que es una versión en desarrollo -->
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+    <name>WeatherReportAPI</name> <!-- Nombre amigable del proyecto -->
+    <description>API to generate weather reports for departure and destination cities.</description> <!-- Breve descripción -->
 
+    <!-- Definición de propiedades del proyecto -->
+    <properties>
+        <java.version>17</java.version> <!-- Versión de Java requerida -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding> 
+        <!-- Codificación de fuente para evitar problemas de caracteres -->
+    </properties>
+
+    <!-- Dependencias necesarias para el proyecto -->
+    <dependencies>
+        <!-- Starter para usar JPA (Java Persistence API) y manejar bases de datos -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Starter para crear APIs REST usando Spring MVC -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Dependencia de la base de datos H2 en memoria, útil para pruebas -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope> <!-- Solo se carga en tiempo de ejecución -->
+        </dependency>
+
+        <!-- Librería Lombok para reducir código boilerplate -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional> <!-- No es obligatoria para la compilación -->
+        </dependency>
+
+        <!-- Starter para pruebas, con soporte para JUnit y herramientas de Spring -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope> <!-- Se usa solo en el entorno de pruebas -->
+        </dependency>
+    </dependencies>
+
+    <!-- Configuración de compilación y plugins -->
+    <build>
+        <plugins>
+            <!-- Plugin de Spring Boot para empaquetar la aplicación como un JAR ejecutable -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>
