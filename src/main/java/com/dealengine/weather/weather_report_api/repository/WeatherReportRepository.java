@@ -1,26 +1,21 @@
 package com.dealengine.weather.weather_report_api.repository;
 
 
-import com.dealengine.weather.weather_report_api.model.WeatherReport;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import com.dealengine.weather.weather_report_api.model.WeatherReport;
+import java.util.Optional;
 
 /**
- * Repository interface for accessing WeatherReport entities from the database.
- * 
- * This interface extends JpaRepository, providing built-in CRUD operations
- * and the ability to define custom query methods based on naming conventions.
+ * Repository interface to handle database operations for WeatherReport.
  */
-@Repository // Marks this interface as a Spring-managed bean for dependency injection.
 public interface WeatherReportRepository extends JpaRepository<WeatherReport, Long> {
 
     /**
-     * Retrieves a list of weather reports for a specific city.
+     * Finds a weather report by departure and destination cities.
      * 
-     * @param city The name of the city to filter reports by.
-     * @return A list of WeatherReport entities matching the city name.
+     * @param departureCity The city of departure.
+     * @param destinationCity The city of destination.
+     * @return An Optional containing the WeatherReport if found, or empty otherwise.
      */
-    List<WeatherReport> findByCity(String city);
+    Optional<WeatherReport> findByDepartureCityAndDestinationCity(String departureCity, String destinationCity);
 }

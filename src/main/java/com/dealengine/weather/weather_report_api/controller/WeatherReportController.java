@@ -1,46 +1,42 @@
 package com.dealengine.weather.weather_report_api.controller;
 
 import com.dealengine.weather.weather_report_api.service.WeatherReportService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 /**
- * Controlador REST que expone endpoints para la API de reportes de clima.
- * Este controlador utiliza el patrón de diseño "Controlador" para gestionar
- * la lógica de las solicitudes HTTP y delegar el procesamiento al servicio correspondiente.
+ * Controller to handle HTTP requests for weather reports.
  */
 @RestController
 public class WeatherReportController {
 
-    // Inyección de dependencias para acceder al servicio de generación de reportes
     private final WeatherReportService weatherReportService;
 
     /**
-     * Constructor del controlador que inyecta la instancia del servicio.
-     * @param weatherReportService Servicio que genera los reportes de clima.
+     * Constructor-based Dependency Injection for the WeatherReportService.
+     * 
+     * @param weatherReportService The service to handle weather report operations.
      */
+    @Autowired
     public WeatherReportController(WeatherReportService weatherReportService) {
         this.weatherReportService = weatherReportService;
     }
 
     /**
-     * Endpoint que genera un reporte del clima entre dos ciudades.
-     * @param departureCity Nombre de la ciudad de salida.
-     * @param destinationCity Nombre de la ciudad de destino.
-     * @return Un mapa (JSON) con el reporte del clima para ambas ciudades.
-     *
-     * Ejemplo de acceso:
-     * GET /api/weather/report?departureCity=Paris&destinationCity=Berlin
+     * Endpoint to generate a weather report based on departure and destination cities.
+     * 
+     * @param departureCity The city of departure.
+     * @param destinationCity The city of destination.
+     * @return JSON representation of the weather report or an error message.
      */
-    @GetMapping("/api/weather/report")
-    public Map<String, Object> getWeatherReport(
-            @RequestParam String departureCity,
-            @RequestParam String destinationCity) {
-
-        // Llama al servicio para generar el reporte y retorna la respuesta como JSON
-        return weatherReportService.generateReport(departureCity, destinationCity);
+    @GetMapping("/weather-report")
+    public String getWeatherReport(@RequestParam String departureCity, @RequestParam String destinationCity) {
+        try {
+            return weatherReportService.generateReport(departureCity, destinationCity);
+        } catch (Exception e) {
+            return "{\"error\":\"An error occurred while generating the report\"}";
+        }
     }
 }
