@@ -3,11 +3,15 @@ package com.dealengine.weather.weather_report_api.service;
 import com.dealengine.weather.weather_report_api.model.WeatherReport;
 import com.dealengine.weather.weather_report_api.repository.WeatherReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service layer responsible for handling the business logic related to Weather Reports.
@@ -56,4 +60,17 @@ public class WeatherReportService {
             return "{\"error\":\"No weather report found for the given cities\"}";
         }
     }
+    /**
+     * Reads the content of the CSV file from the classpath and returns it as a String.
+     *
+     * @return The content of the CSV file as a String.
+     * @throws Exception If there is an error reading the file.
+     */
+    public String readCsvFile() throws Exception {
+        var resource = new ClassPathResource("challenge_dataset.csv");
+        try (var reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+            return reader.lines().collect(Collectors.joining("\n"));
+        }
+    }    
+    
 }
