@@ -1,42 +1,53 @@
 package com.dealengine.weather.weather_report_api.controller;
 
-import com.dealengine.weather.weather_report_api.service.WeatherReportService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.dealengine.weather.weather_report_api.service.AsyncWeatherService;
+import java.util.concurrent.CompletableFuture;
+
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Controller to handle HTTP requests for weather reports.
+ * Controller to handle requests for weather reports.
  */
 @RestController
+@RequestMapping("/api/weather")
 public class WeatherReportController {
 
-    private final WeatherReportService weatherReportService;
-
-    /**
-     * Constructor-based Dependency Injection for the WeatherReportService.
-     * 
-     * @param weatherReportService The service to handle weather report operations.
-     */
-    @Autowired
-    public WeatherReportController(WeatherReportService weatherReportService) {
-        this.weatherReportService = weatherReportService;
+	private final AsyncWeatherService asyncWeatherService;
+    
+	
+	public WeatherReportController(AsyncWeatherService asyncWeatherService) {
+        this.asyncWeatherService = asyncWeatherService;
     }
 
     /**
-     * Endpoint to generate a weather report based on departure and destination cities.
-     * 
-     * @param departureCity The city of departure.
-     * @param destinationCity The city of destination.
-     * @return JSON representation of the weather report or an error message.
+     * Endpoint to fetch weather data for origin and destination airports concurrently.
+     *
+     * @param originLat Latitude of the origin airport.
+     * @param originLon Longitude of the origin airport.
+     * @param destLat Latitude of the destination airport.
+     * @param destLon Longitude of the destination airport.
+     * @return JSON response with weather data for both airports.
      */
-    @GetMapping("/weather-report")
-    public String getWeatherReport(@RequestParam String departureCity, @RequestParam String destinationCity) {
-        try {
-            return weatherReportService.generateReport(departureCity, destinationCity);
-        } catch (Exception e) {
-            return "{\"error\":\"An error occurred while generating the report\"}";
-        }
+    @GetMapping("/{originLat}/{originLon}/{destLat}/{destLon}")
+    public CompletableFuture<String> getWeatherReport(
+            @PathVariable double originLat,
+            @PathVariable double originLon,
+            @PathVariable double destLat,
+            @PathVariable double destLon) {
+
+        // Fetch weather data concurrently for both airports.
+        CompletableFuture<String> originWeather =
+                asyncWeatherService.getWeatherAsync(originLat, originLon);
+        CompletableFuture<String> destinationWeather =
+                asyncWeatherService.getWeatherAsync(destLat, destLon);
+
+        // Combine both results into a single JSON response.
+        return originWeather.thenCombine(destinationWeather,
+                (origin, destination) -> String.format(
+                        "{\"originWeather\":%s,\"destinationWeather\":%s}",
+                        origin, destination));
     }
 }
