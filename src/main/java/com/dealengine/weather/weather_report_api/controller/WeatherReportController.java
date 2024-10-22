@@ -13,7 +13,7 @@ import java.util.Map;
 
 /**
  * Controller to handle requests for weather reports.
- * Uses concurrent processing to fetch weather data for origin and destination airports.
+ * Uses concurrent processing to fetch weather data for origin and destination cities.
  */
 @RestController
 @RequestMapping("/api/weather")
@@ -31,28 +31,33 @@ public class WeatherReportController {
     }
 
     /**
-     * Endpoint to fetch weather data for origin and destination airports concurrently.
+     * Endpoint to fetch weather data for origin and destination cities concurrently.
      *
-     * @param originCode IATA code of the origin airport.
-     * @param destinationCode IATA code of the destination airport.
+     * @param originCityName Name of the origin city.
+     * @param originCountryCode ISO 3166 code of the origin country's region.
+     * @param destCityName Name of the destination city.
+     * @param destCountryCode ISO 3166 code of the destination country's region.
      * @return A ResponseEntity containing the JSON response with simplified weather data.
      */
-    @GetMapping("/{originCode}/{destinationCode}")
+    @GetMapping("/{originCityName}/{originCountryCode}/{destCityName}/{destCountryCode}")
     public CompletableFuture<ResponseEntity<Map<String, Object>>> getWeatherReport(
-            @PathVariable String originCode,
-            @PathVariable String destinationCode) {
+            @PathVariable String originCityName,
+            @PathVariable String originCountryCode,
+            @PathVariable String destCityName,
+            @PathVariable String destCountryCode) {
 
-        // Fetch weather data concurrently for both airports.
+        // Fetch weather data concurrently for both cities.
         CompletableFuture<Map<String, Object>> originWeather =
-                asyncWeatherService.getSimplifiedWeatherAsync(originCode);
+                asyncWeatherService.getSimplifiedWeatherAsync(originCityName, originCountryCode);
         CompletableFuture<Map<String, Object>> destinationWeather =
-                asyncWeatherService.getSimplifiedWeatherAsync(destinationCode);
+                asyncWeatherService.getSimplifiedWeatherAsync(destCityName, destCountryCode);
 
         // Combine both results into a single JSON response.
         return originWeather.thenCombine(destinationWeather, (origin, destination) -> {
             Map<String, Object> response = new HashMap<>();
             response.put("origin", origin);
-            
+
+            // Handle errors gracefully in case destination weather data is unavailable.
             if (destination.containsKey("error")) {
                 response.put("destination", Map.of(
                         "message", destination.get("message"),
@@ -61,7 +66,7 @@ public class WeatherReportController {
             } else {
                 response.put("destination", destination);
             }
-            
+
             return ResponseEntity.ok(response);
         }).exceptionally(ex -> ResponseEntity.status(500)
                 .body(Map.of("error", "An unexpected error occurred: " + ex.getMessage())));
