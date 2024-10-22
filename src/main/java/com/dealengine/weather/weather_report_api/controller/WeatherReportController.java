@@ -7,18 +7,25 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
 
 /**
  * Controller to handle requests for weather reports.
+ * 
+ * Uses concurrent processing to fetch weather data for origin and destination airports.
  */
 @RestController
 @RequestMapping("/api/weather")
 public class WeatherReportController {
 
-	private final AsyncWeatherService asyncWeatherService;
-    
-	
-	public WeatherReportController(AsyncWeatherService asyncWeatherService) {
+    private final AsyncWeatherService asyncWeatherService;
+
+    /**
+     * Constructor for dependency injection.
+     *
+     * @param asyncWeatherService Service to fetch weather data asynchronously.
+     */
+    public WeatherReportController(AsyncWeatherService asyncWeatherService) {
         this.asyncWeatherService = asyncWeatherService;
     }
 
@@ -29,10 +36,10 @@ public class WeatherReportController {
      * @param originLon Longitude of the origin airport.
      * @param destLat Latitude of the destination airport.
      * @param destLon Longitude of the destination airport.
-     * @return JSON response with weather data for both airports.
+     * @return A ResponseEntity containing the JSON response with weather data for both airports.
      */
     @GetMapping("/{originLat}/{originLon}/{destLat}/{destLon}")
-    public CompletableFuture<String> getWeatherReport(
+    public CompletableFuture<ResponseEntity<String>> getWeatherReport(
             @PathVariable double originLat,
             @PathVariable double originLon,
             @PathVariable double destLat,
@@ -47,7 +54,9 @@ public class WeatherReportController {
         // Combine both results into a single JSON response.
         return originWeather.thenCombine(destinationWeather,
                 (origin, destination) -> String.format(
-                        "{\"originWeather\":%s,\"destinationWeather\":%s}",
-                        origin, destination));
+                        "{\"originWeather\":%s,\"destinationWeather\":%s}", origin, destination))
+                .thenApply(ResponseEntity::ok)
+                .exceptionally(ex -> ResponseEntity.status(500)
+                        .body(String.format("{\"error\":\"Failed to fetch weather data: %s\"}", ex.getMessage())));
     }
 }
