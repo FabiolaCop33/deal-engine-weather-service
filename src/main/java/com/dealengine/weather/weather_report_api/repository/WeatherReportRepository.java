@@ -1,6 +1,5 @@
 package com.dealengine.weather.weather_report_api.repository;
 
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import com.dealengine.weather.weather_report_api.model.WeatherReport;
 import java.util.Optional;
@@ -11,11 +10,11 @@ import java.util.Optional;
 public interface WeatherReportRepository extends JpaRepository<WeatherReport, Long> {
 
     /**
-     * Finds a weather report by departure and destination cities.
+     * Finds a weather report by origin and destination IATA codes.
      * 
-     * @param departureCity The city of departure.
-     * @param destinationCity The city of destination.
+     * @param originIataCode The IATA code of the origin airport.
+     * @param destinationIataCode The IATA code of the destination airport.
      * @return An Optional containing the WeatherReport if found, or empty otherwise.
      */
-    Optional<WeatherReport> findByDepartureCityAndDestinationCity(String departureCity, String destinationCity);
+    Optional<WeatherReport> findByOriginIataCodeAndDestinationIataCode(String originIataCode, String destinationIataCode);
 }
