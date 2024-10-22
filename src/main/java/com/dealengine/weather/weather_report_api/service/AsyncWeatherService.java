@@ -11,8 +11,6 @@ import java.util.concurrent.CompletableFuture;
  * 
  * This class uses Spring's @Async annotation to handle concurrent requests
  * and ensures requests are performed efficiently without exceeding rate limits.
- * 
- * @author YourName
  */
 @Service
 public class AsyncWeatherService {
