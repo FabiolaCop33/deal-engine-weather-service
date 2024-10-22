@@ -2,7 +2,6 @@ package com.dealengine.weather.weather_report_api.controller;
 
 import com.dealengine.weather.weather_report_api.service.AsyncWeatherService;
 import java.util.concurrent.CompletableFuture;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,28 +29,24 @@ public class WeatherReportController {
     }
 
     /**
-     * Endpoint to fetch weather data for origin and destination airports concurrently.
+     * Endpoint to fetch weather data for origin and destination airports based on IATA codes.
      *
-     * @param originLat Latitude of the origin airport.
-     * @param originLon Longitude of the origin airport.
-     * @param destLat Latitude of the destination airport.
-     * @param destLon Longitude of the destination airport.
+     * @param originIata The IATA code of the origin airport.
+     * @param destinationIata The IATA code of the destination airport.
      * @return A ResponseEntity containing the JSON response with weather data for both airports.
      */
-    @GetMapping("/{originLat}/{originLon}/{destLat}/{destLon}")
+    @GetMapping("/{originIata}/{destinationIata}")
     public CompletableFuture<ResponseEntity<String>> getWeatherReport(
-            @PathVariable double originLat,
-            @PathVariable double originLon,
-            @PathVariable double destLat,
-            @PathVariable double destLon) {
+            @PathVariable String originIata,
+            @PathVariable String destinationIata) {
 
-        // Fetch weather data concurrently for both airports.
-        CompletableFuture<String> originWeather =
-                asyncWeatherService.getWeatherAsync(originLat, originLon);
-        CompletableFuture<String> destinationWeather =
-                asyncWeatherService.getWeatherAsync(destLat, destLon);
+        // Fetch weather data asynchronously for both airports based on their IATA codes.
+        CompletableFuture<String> originWeather = 
+                asyncWeatherService.getWeatherByIataCodeAsync(originIata);
+        CompletableFuture<String> destinationWeather = 
+                asyncWeatherService.getWeatherByIataCodeAsync(destinationIata);
 
-        // Combine both results into a single JSON response.
+        // Combine both weather data results into a single JSON response.
         return originWeather.thenCombine(destinationWeather,
                 (origin, destination) -> String.format(
                         "{\"originWeather\":%s,\"destinationWeather\":%s}", origin, destination))
