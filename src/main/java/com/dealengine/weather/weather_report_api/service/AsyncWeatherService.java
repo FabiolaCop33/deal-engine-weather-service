@@ -38,29 +38,33 @@ public class AsyncWeatherService {
 
             Map<String, Object> weatherData = restTemplate.getForObject(url, Map.class);
 
-            // Extract relevant fields: city name, temperature, and weather description.
-            String city = (String) weatherData.get("name");
-            Map<String, Object> main = (Map<String, Object>) weatherData.get("main");
-            double temperature = (double) main.get("temp");
-            List<Map<String, Object>> weatherList = (List<Map<String, Object>>) weatherData.get("weather");
-            Map<String, Object> weather = weatherList.get(0);
-            String conditions = (String) weather.get("description");
+            // Extraer los datos relevantes solo si la respuesta es válida.
+            if (weatherData != null && weatherData.containsKey("main")) {
+                String city = (String) weatherData.get("name");
+                Map<String, Object> main = (Map<String, Object>) weatherData.get("main");
+                double temperature = (double) main.get("temp");
 
-            // Return a simplified response.
-            Map<String, Object> simplifiedWeather = Map.of(
-                    "city", city,
-                    "temperature", temperature,
-                    "conditions", conditions
-            );
+                Map<String, Object> weather = 
+                        ((List<Map<String, Object>>) weatherData.get("weather")).get(0);
+                String conditions = (String) weather.get("description");
 
-            return CompletableFuture.completedFuture(simplifiedWeather);
-
+                return CompletableFuture.completedFuture(Map.of(
+                        "city", city,
+                        "temperature", temperature,
+                        "conditions", conditions
+                ));
+            } else {
+                return CompletableFuture.completedFuture(Map.of(
+                        "error", "City not found",
+                        "message", "The city code provided is not recognized by the API"
+                ));
+            }
         } catch (Exception e) {
-            // Handle exceptions and return an error message.
             return CompletableFuture.completedFuture(Map.of(
                     "error", "Failed to fetch weather for " + cityCode,
                     "message", e.getMessage()
             ));
         }
     }
+
 }
