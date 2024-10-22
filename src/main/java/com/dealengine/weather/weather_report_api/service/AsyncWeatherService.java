@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Service to asynchronously fetch weather data using OpenWeatherMap API.
- * Uses Geocoding API to resolve IATA codes to city names and coordinates.
+ * Service to asynchronously fetch weather data using the OpenWeatherMap API.
+ * Now includes Geocoding API integration to handle city name and country code resolution.
  */
 @Service
 public class AsyncWeatherService {
@@ -28,18 +28,18 @@ public class AsyncWeatherService {
             "http://api.openweathermap.org/geo/1.0/direct?q={cityName},{countryCode}&limit=1&appid={apiKey}";
 
     /**
-     * Asynchronously fetches simplified weather data for a given IATA code (city/airport code).
-     * 
-     * @param cityCode IATA code of the city/airport.
-     * @param countryCode ISO 3166-1 alpha-2 country code.
+     * Asynchronously fetches simplified weather data for a given city name and country code.
+     *
+     * @param cityName Name of the city.
+     * @param countryCode ISO 3166 country code.
      * @return CompletableFuture with simplified weather data as a Map.
      */
     @Async
-    public CompletableFuture<Map<String, Object>> getSimplifiedWeatherAsync(String cityCode, String countryCode) {
+    public CompletableFuture<Map<String, Object>> getSimplifiedWeatherAsync(String cityName, String countryCode) {
         try {
-            // Resolve the city name and coordinates using the Geocoding API.
+            // Resolve city name and country code to coordinates using the Geocoding API
             String geoUrl = GEOCODING_API_URL
-                    .replace("{cityName}", cityCode)
+                    .replace("{cityName}", cityName)
                     .replace("{countryCode}", countryCode)
                     .replace("{apiKey}", apiKey);
 
@@ -47,17 +47,18 @@ public class AsyncWeatherService {
 
             if (geoData == null || geoData.length == 0) {
                 return CompletableFuture.completedFuture(Map.of(
-                        "city", cityCode,
+                        "city", cityName,
                         "error", "City not found",
-                        "message", "The provided IATA code is not recognized by the API"
+                        "message", "The city name or country code provided is not recognized by the API"
                 ));
             }
 
+            // Extract latitude and longitude from the Geocoding API response
             Map<String, Object> location = geoData[0];
             double lat = (double) location.get("lat");
             double lon = (double) location.get("lon");
 
-            // Fetch weather data using the resolved coordinates.
+            // Fetch weather data using the resolved coordinates
             String weatherUrl = WEATHER_API_URL
                     .replace("{lat}", String.valueOf(lat))
                     .replace("{lon}", String.valueOf(lon))
@@ -66,29 +67,31 @@ public class AsyncWeatherService {
             Map<String, Object> weatherData = restTemplate.getForObject(weatherUrl, Map.class);
 
             if (weatherData != null && weatherData.containsKey("main")) {
-                String city = (String) location.get("name");
+                // Extract relevant weather data
+                String resolvedCity = (String) location.get("name");
                 Map<String, Object> main = (Map<String, Object>) weatherData.get("main");
                 double temperature = (double) main.get("temp");
 
-                Map<String, Object> weather =
+                Map<String, Object> weather = 
                         ((List<Map<String, Object>>) weatherData.get("weather")).get(0);
                 String conditions = (String) weather.get("description");
 
                 return CompletableFuture.completedFuture(Map.of(
-                        "city", city,
+                        "city", resolvedCity,
                         "temperature", temperature,
                         "conditions", conditions
                 ));
             } else {
                 return CompletableFuture.completedFuture(Map.of(
-                        "city", cityCode,
+                        "city", cityName,
                         "error", "Weather data not available"
                 ));
             }
 
         } catch (Exception e) {
+            // Handle any exceptions and return an error response
             return CompletableFuture.completedFuture(Map.of(
-                    "city", cityCode,
+                    "city", cityName,
                     "error", "Failed to fetch data",
                     "message", e.getMessage()
             ));

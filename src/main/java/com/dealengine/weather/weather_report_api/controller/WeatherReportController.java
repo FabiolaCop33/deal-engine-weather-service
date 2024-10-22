@@ -13,78 +13,62 @@ import java.util.Map;
 
 /**
  * Controller to handle requests for weather reports.
- * Uses concurrent processing to fetch weather data for origin and destination airports.
+ * Uses concurrent processing to fetch weather data for origin and destination cities.
  */
 @RestController
 @RequestMapping("/api/weather")
 public class WeatherReportController {
 
     private final AsyncWeatherService asyncWeatherService;
-    private final Map<String, String> airportMap; // Holds airport names for each IATA code.
 
     /**
-     * Constructor for dependency injection and initializing the airport map.
+     * Constructor for dependency injection.
      *
      * @param asyncWeatherService Service to fetch weather data asynchronously.
      */
     public WeatherReportController(AsyncWeatherService asyncWeatherService) {
         this.asyncWeatherService = asyncWeatherService;
-        this.airportMap = initializeAirportMap(); // Load the airport data.
     }
 
     /**
-     * Initializes a map of IATA codes to airport names using the dataset.
-     * Replace with appropriate logic to load your dataset dynamically if needed.
+     * Endpoint to fetch weather data for origin and destination cities concurrently.
      *
-     * @return A map with IATA codes as keys and airport names as values.
+     * @param originCityName Name of the origin city.
+     * @param originCountryCode ISO 3166 code of the origin country's region.
+     * @param destCityName Name of the destination city.
+     * @param destCountryCode ISO 3166 code of the destination country's region.
+     * @return A ResponseEntity containing the JSON response with simplified weather data.
      */
-    private Map<String, String> initializeAirportMap() {
-        Map<String, String> map = new HashMap<>();
-        map.put("TLC", "Licenciado Adolfo Lopez Mateos International Airport");
-        map.put("MTY", "General Mariano Escobedo International Airport");
-        map.put("MEX", "Licenciado Benito Juarez International Airport");
-        // Add more airport mappings from your dataset as needed.
-        return map;
-    }
+    @GetMapping("/{originCityName}/{originCountryCode}/{destCityName}/{destCountryCode}")
+    public CompletableFuture<ResponseEntity<Map<String, Object>>> getWeatherReport(
+            @PathVariable String originCityName,
+            @PathVariable String originCountryCode,
+            @PathVariable String destCityName,
+            @PathVariable String destCountryCode) {
 
-    /**
-     * Endpoint to fetch weather data and flight details concurrently.
-     *
-     * @param flightNumber     Flight number for the trip.
-     * @param originCode       IATA code of the origin airport.
-     * @param destinationCode  IATA code of the destination airport.
-     * @return A ResponseEntity containing the JSON response with flight and weather data.
-     */
-    @GetMapping("/{flightNumber}/{originCode}/{destinationCode}")
-    public CompletableFuture<ResponseEntity<Map<String, Object>>> getFlightWeatherReport(
-            @PathVariable String flightNumber,
-            @PathVariable String originCode,
-            @PathVariable String destinationCode) {
-
-        // Fetch weather data for origin and destination concurrently.
+        // Fetch weather data concurrently for both cities.
         CompletableFuture<Map<String, Object>> originWeather =
-                asyncWeatherService.getSimplifiedWeatherAsync(originCode, "MX");
+                asyncWeatherService.getSimplifiedWeatherAsync(originCityName, originCountryCode);
         CompletableFuture<Map<String, Object>> destinationWeather =
-                asyncWeatherService.getSimplifiedWeatherAsync(destinationCode, "MX");
+                asyncWeatherService.getSimplifiedWeatherAsync(destCityName, destCountryCode);
 
-        // Combine weather data with flight details.
+        // Combine both results into a single JSON response.
         return originWeather.thenCombine(destinationWeather, (origin, destination) -> {
             Map<String, Object> response = new HashMap<>();
-            response.put("flightNumber", flightNumber);
-
-            // Flight details: Airport names based on IATA codes.
-            response.put("originAirport", airportMap.getOrDefault(originCode, "Unknown Airport"));
-            response.put("destinationAirport", airportMap.getOrDefault(destinationCode, "Unknown Airport"));
-
-            // Weather data: Include error handling if destination weather is not available.
             response.put("origin", origin);
-            response.put("destination", destination.containsKey("error")
-                    ? Map.of("message", destination.get("message"), "error", destination.get("error"))
-                    : destination);
+
+            // Handle errors gracefully in case destination weather data is unavailable.
+            if (destination.containsKey("error")) {
+                response.put("destination", Map.of(
+                        "message", destination.get("message"),
+                        "error", destination.get("error")
+                ));
+            } else {
+                response.put("destination", destination);
+            }
 
             return ResponseEntity.ok(response);
         }).exceptionally(ex -> ResponseEntity.status(500)
                 .body(Map.of("error", "An unexpected error occurred: " + ex.getMessage())));
     }
-
 }
