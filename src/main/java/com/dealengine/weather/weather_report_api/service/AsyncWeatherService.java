@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Service to asynchronously fetch weather data using OpenWeatherMap API.
- * Uses Geocoding API to resolve IATA codes to city names/coordinates.
+ * Uses Geocoding API to resolve IATA codes to city names and coordinates.
  */
 @Service
 public class AsyncWeatherService {
@@ -25,20 +25,22 @@ public class AsyncWeatherService {
             "https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={apiKey}&units=metric";
 
     private static final String GEOCODING_API_URL =
-            "http://api.openweathermap.org/geo/1.0/direct?q={cityName}&limit=1&appid={apiKey}";
+            "http://api.openweathermap.org/geo/1.0/direct?q={cityName},{countryCode}&limit=1&appid={apiKey}";
 
     /**
-     * Asynchronously fetches simplified weather data for a given IATA code (city name).
-     *
+     * Asynchronously fetches simplified weather data for a given IATA code (city/airport code).
+     * 
      * @param cityCode IATA code of the city/airport.
+     * @param countryCode ISO 3166-1 alpha-2 country code.
      * @return CompletableFuture with simplified weather data as a Map.
      */
     @Async
-    public CompletableFuture<Map<String, Object>> getSimplifiedWeatherAsync(String cityCode) {
+    public CompletableFuture<Map<String, Object>> getSimplifiedWeatherAsync(String cityCode, String countryCode) {
         try {
-            // Resolve city name via Geocoding API
+            // Resolve the city name and coordinates using the Geocoding API.
             String geoUrl = GEOCODING_API_URL
                     .replace("{cityName}", cityCode)
+                    .replace("{countryCode}", countryCode)
                     .replace("{apiKey}", apiKey);
 
             Map<String, Object>[] geoData = restTemplate.getForObject(geoUrl, Map[].class);
@@ -55,7 +57,7 @@ public class AsyncWeatherService {
             double lat = (double) location.get("lat");
             double lon = (double) location.get("lon");
 
-            // Fetch weather data using resolved coordinates
+            // Fetch weather data using the resolved coordinates.
             String weatherUrl = WEATHER_API_URL
                     .replace("{lat}", String.valueOf(lat))
                     .replace("{lon}", String.valueOf(lon))
