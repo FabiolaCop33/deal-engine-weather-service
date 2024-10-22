@@ -25,8 +25,8 @@ public class AsyncWeatherService {
             "https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={apiKey}&units=metric";
 
     private static final String GEOCODING_API_URL =
-            "http://api.openweathermap.org/geo/1.0/direct?q={cityCode}&limit=1&appid={apiKey}";
-
+    		"http://api.openweathermap.org/geo/1.0/direct?q={cityCode},MX&limit=1&appid={apiKey}";
+    
     /**
      * Asynchronously fetches simplified weather data for a given city code (IATA).
      *
