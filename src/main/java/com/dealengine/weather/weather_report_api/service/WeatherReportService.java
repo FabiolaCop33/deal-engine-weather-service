@@ -1,76 +1,50 @@
 package com.dealengine.weather.weather_report_api.service;
 
-import com.dealengine.weather.weather_report_api.model.WeatherReport;
 import com.dealengine.weather.weather_report_api.repository.WeatherReportRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.concurrent.ExecutionException;
 
 /**
- * Service layer responsible for handling the business logic related to Weather Reports.
- * This class interacts with the WeatherReportRepository to fetch and save data.
- * 
- * Pattern: Service Layer
- * - Separates business logic from controllers, promoting modularity and reusability.
+ * Service layer responsible for generating weather reports by interacting with
+ * WeatherService to fetch real-time weather data.
  */
 @Service
 public class WeatherReportService {
 
     private final WeatherReportRepository weatherReportRepository;
-    private final ObjectMapper objectMapper;
+    private final WeatherService weatherService;
 
     /**
-     * Constructor-based Dependency Injection.
-     * Ensures that the WeatherReportRepository and ObjectMapper are properly injected.
-     * 
-     * @param weatherReportRepository Repository to access weather data.
-     * @param objectMapper JSON utility for serialization.
+     * Constructor-based Dependency Injection for WeatherReportRepository and WeatherService.
      */
     @Autowired
-    public WeatherReportService(WeatherReportRepository weatherReportRepository, ObjectMapper objectMapper) {
+    public WeatherReportService(WeatherReportRepository weatherReportRepository, 
+                                WeatherService weatherService) {
         this.weatherReportRepository = weatherReportRepository;
-        this.objectMapper = objectMapper;
+        this.weatherService = weatherService;
     }
 
     /**
-     * Generates a JSON weather report for the given departure and destination cities.
-     * 
-     * @param departureCity The city of departure.
-     * @param destinationCity The city of destination.
-     * @return A JSON string representation of the WeatherReport.
-     * @throws JsonProcessingException If there's an error during JSON processing.
-     */
-    public String generateReport(String departureCity, String destinationCity) throws JsonProcessingException {
-        // Fetch the weather report from the database based on the cities provided
-        Optional<WeatherReport> report = weatherReportRepository
-            .findByDepartureCityAndDestinationCity(departureCity, destinationCity);
-
-        if (report.isPresent()) {
-            // Convert the found report to JSON
-            return objectMapper.writeValueAsString(report.get());
-        } else {
-            // If no report is found, return a JSON error message
-            return "{\"error\":\"No weather report found for the given cities\"}";
-        }
-    }
-    /**
-     * Reads the content of the CSV file from the classpath and returns it as a String.
+     * Generates a weather report using geographic coordinates for both origin and destination.
      *
-     * @return The content of the CSV file as a String.
-     * @throws Exception If there is an error reading the file.
+     * @param originLatitude  Latitude of the origin airport.
+     * @param originLongitude Longitude of the origin airport.
+     * @param destLatitude    Latitude of the destination airport.
+     * @param destLongitude   Longitude of the destination airport.
+     * @return A JSON string with the weather reports for origin and destination.
      */
-    public String readCsvFile() throws Exception {
-        var resource = new ClassPathResource("challenge_dataset.csv");
-        try (var reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
-            return reader.lines().collect(Collectors.joining("\n"));
+    public String generateReport(double originLatitude, double originLongitude, 
+                                 double destLatitude, double destLongitude) {
+        try {
+            // Fetch weather reports concurrently
+            String originWeather = weatherService.getWeatherAsync(originLatitude, originLongitude).get();
+            String destinationWeather = weatherService.getWeatherAsync(destLatitude, destLongitude).get();
+
+            return String.format("{\"origin\": %s, \"destination\": %s}", originWeather, destinationWeather);
+
+        } catch (InterruptedException | ExecutionException e) {
+            return "{\"error\":\"Failed to fetch weather reports\"}";
         }
-    }    
-    
+    }
 }
