@@ -1,5 +1,6 @@
 package com.dealengine.weather.weather_report_api.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -13,10 +14,15 @@ import java.util.concurrent.CompletableFuture;
 @Service
 public class WeatherService {
 
-    private final String apiKey = "c0e8d1d0c2a83784be52e988ff6550b8"; 
-    private final String weatherApiUrl = "https://api.openweathermap.org/data/2.5/weather";
-
     private final RestTemplate restTemplate;
+
+    // Inject the API key from application.properties
+    @Value("${weather.api.key}")
+    private String apiKey;
+
+    // Inject the base URL from application.properties (optional for better flexibility)
+    @Value("${weather.api.url:https://api.openweathermap.org/data/2.5/weather}")
+    private String weatherApiUrl;
 
     /**
      * Constructor to initialize the RestTemplate.
