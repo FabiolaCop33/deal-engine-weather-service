@@ -20,14 +20,29 @@ import java.util.Map;
 public class WeatherReportController {
 
     private final AsyncWeatherService asyncWeatherService;
+    private final Map<String, String> airportMap; // Holds airport names for each IATA code.
 
     /**
-     * Constructor for dependency injection.
+     * Constructor for dependency injection and initializing the airport map.
      *
      * @param asyncWeatherService Service to fetch weather data asynchronously.
      */
     public WeatherReportController(AsyncWeatherService asyncWeatherService) {
         this.asyncWeatherService = asyncWeatherService;
+        this.airportMap = initializeAirportMap(); // Load the airport data.
+    }
+
+    /**
+     * Initializes a map of IATA codes to airport names using the dataset.
+     * Replace with appropriate logic to load your dataset dynamically if needed.
+     */
+    private Map<String, String> initializeAirportMap() {
+        Map<String, String> map = new HashMap<>();
+        map.put("TLC", "Licenciado Adolfo Lopez Mateos International Airport");
+        map.put("MTY", "General Mariano Escobedo International Airport");
+        map.put("MEX", "Licenciado Benito Juarez International Airport");
+        // Add all other airport mappings here based on the dataset.
+        return map;
     }
 
     /**
@@ -56,8 +71,8 @@ public class WeatherReportController {
             response.put("flightNumber", flightNumber);
 
             // Flight details.
-            response.put("originAirport", origin.getOrDefault("airport", "Unknown Airport"));
-            response.put("destinationAirport", destination.getOrDefault("airport", "Unknown Airport"));
+            response.put("originAirport", airportMap.getOrDefault(originCode, "Unknown Airport"));
+            response.put("destinationAirport", airportMap.getOrDefault(destinationCode, "Unknown Airport"));
 
             // Weather data.
             response.put("origin", origin);
